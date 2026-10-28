@@ -16,16 +16,19 @@ import { ProjectModal } from './components/ProjectModal';
 import { ContactModal } from './components/ContactModal';
 import type { Project } from './data/portfolioData';
 
-gsap.registerPlugin(ScrollTrigger);
-
 export function App() {
   const [preloaderComplete, setPreloaderComplete] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactSubject, setContactSubject] = useState('New Project Collaboration');
 
-  // Initialize smooth Lenis scrolling
+  // Initialize GSAP & Lenis smooth scrolling
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Register ScrollTrigger strictly inside useEffect
+    gsap.registerPlugin(ScrollTrigger);
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -48,6 +51,16 @@ export function App() {
     };
   }, []);
 
+  // Call ScrollTrigger.refresh() 300ms after preloader finishes
+  useEffect(() => {
+    if (preloaderComplete && typeof window !== 'undefined') {
+      const timer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [preloaderComplete]);
+
   const handleScrollToAbout = () => {
     const aboutEl = document.getElementById('about');
     if (aboutEl) {
@@ -68,18 +81,16 @@ export function App() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#0A0A0A] text-[#0A0A0A] font-body">
-      {/* Section 1: Preloader / Intro Splash */}
-      {!preloaderComplete && (
-        <Preloader onComplete={() => setPreloaderComplete(true)} />
-      )}
+    <div className="relative min-h-screen w-full bg-[#0A0A0A] text-[#0A0A0A] font-body selection:bg-black selection:text-white">
+      {/* Section 1: Safe Preloader with Guaranteed Auto-Dismiss */}
+      <Preloader onComplete={() => setPreloaderComplete(true)} />
 
-      {/* Floating Header Navbar */}
+      {/* Floating Header Navbar (absolute at Hero top, scrolls away cleanly) */}
       <Navbar onOpenContact={() => setContactModalOpen(true)} />
 
       {/* Main Sections Flow */}
       <main className="relative w-full">
-        {/* Section 2: Hero Section (Off-white) */}
+        {/* Section 2: Hero Section (Off-white) with mouse-move parallax & magnetic UI */}
         <Hero onScrollDown={handleScrollToAbout} />
 
         {/* Section 3: "ABOUT ME" Scroll-Expand Portal (Starry Night / Obsidian) */}
@@ -100,7 +111,7 @@ export function App() {
         {/* Section 7: "THE SERVICES WE PROVIDE" Interactive Accordion (Off-white) */}
         <ServicesAccordion onInquire={handleInquireService} />
 
-        {/* Section 8: "LET'S TALK" Footer (Obsidian Black) */}
+        {/* Section 8: "LET'S TALK" Footer (Obsidian Black) with cursor spotlight */}
         <FooterTalk onOpenContact={() => setContactModalOpen(true)} />
       </main>
 

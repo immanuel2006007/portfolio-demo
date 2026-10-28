@@ -20,12 +20,12 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
   const total = PROJECTS.length;
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (typeof window === 'undefined' || !containerRef.current) return;
 
     const st = ScrollTrigger.create({
       trigger: containerRef.current,
       start: 'top top',
-      end: '+=350%',
+      end: '+=320%',
       pin: true,
       scrub: 1.2,
       onUpdate: (self) => {
@@ -38,28 +38,26 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
     };
   }, []);
 
-  // Determine current phase and morph interpolation
-  // 0% - 45%: Phase A (Hexagonal Ring)
-  // 45% - 60%: Morphing transition from Ring to Vertical Drum
-  // 60% - 100%: Phase B (3D Vertical Drum Cycling)
+  // Morph factor: 0 in Phase A (0%–45%), transitions to 1 in Phase B (45%–60%), stays 1 (60%–100%)
+  const morph = gsap.utils.clamp(0, 1, (scrollProgress - 0.45) / 0.15);
   const isDrumPhase = scrollProgress > 0.45;
-  const morph = Math.min(Math.max((scrollProgress - 0.45) / 0.15, 0), 1);
 
-  // Hexagon rotation angle based on scroll
-  const hexRotation = (scrollProgress / 0.45) * 180;
+  // Hexagonal wheel rotation driven by scroll (0%–45%)
+  const scrollRotation = (scrollProgress / 0.45) * 180;
 
-  // Active drum index based on scroll (60% to 100%) + drag offset
+  // Cylindrical drum cycle progress driven by scroll (55%–100%) + manual drag
   const drumCycleProgress = isDrumPhase
     ? Math.max((scrollProgress - 0.55) / 0.45, 0) * (total - 1) + dragOffset
     : 0;
 
-  const activeIndex = Math.min(
-    Math.max(Math.round(drumCycleProgress), 0),
-    total - 1
+  const activeIndex = gsap.utils.clamp(
+    0,
+    total - 1,
+    Math.round(drumCycleProgress)
   );
   const activeProject = PROJECTS[activeIndex];
 
-  // Drag interaction for drum
+  // Pointer drag support for direct drum manipulation
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isDrumPhase) return;
     setIsDragging(true);
@@ -69,7 +67,7 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     const diff = (startY - e.clientY) / 120;
-    setDragOffset((prev) => Math.max(Math.min(prev + diff * 0.1, total - 1), -activeIndex));
+    setDragOffset((prev) => gsap.utils.clamp(-activeIndex, total - 1 - activeIndex, prev + diff * 0.08));
   };
 
   const handleMouseUp = () => {
@@ -103,7 +101,7 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
         {/* Left Side: Active Project Title in Drum Mode */}
         <div
           className="w-1/4 hidden lg:flex flex-col justify-center z-20 transition-opacity duration-500"
-          style={{ opacity: morph > 0.5 ? 1 : 0 }}
+          style={{ opacity: morph > 0.4 ? 1 : 0 }}
         >
           <span className="text-[10px] font-mono-tech tracking-[0.2em] text-zinc-400 block mb-2">
             PROJECT 0{activeIndex + 1}
@@ -117,7 +115,7 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
         </div>
 
         {/* Center Canvas / 3D Perspective Stage */}
-        <div className="relative flex-1 flex items-center justify-center h-[520px] perspective-[1500px]">
+        <div className="relative flex-1 flex items-center justify-center h-[520px] perspective-[1400px]">
           {/* Centered WORKS '26 typography for Hexagon mode (fades out as morph proceeds) */}
           <div
             className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 transition-opacity duration-300"
@@ -131,39 +129,39 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
           {/* 6 Project Cards Interpolating from 2D Hexagonal Ring to 3D Vertical Drum */}
           <div className="relative w-[340px] sm:w-[460px] h-[460px] flex items-center justify-center transform-style-3d">
             {PROJECTS.map((project, i) => {
-              // --- 1. Hexagon Coordinates (Phase A) ---
-              const hexBaseAngle = (i * 360) / total;
-              const hexAngle = (hexBaseAngle + hexRotation) * (Math.PI / 180);
-              const hexRadius = window.innerWidth < 640 ? 155 : 215;
-
-              const hexX = Math.cos(hexAngle) * hexRadius;
-              const hexY = Math.sin(hexAngle) * hexRadius;
-              const hexRotateZ = hexBaseAngle + hexRotation + 90;
-              const hexRotateX = 0;
+              // --- Phase A: 2D Hexagonal Wheel (radius: 250px) ---
+              const hexAngle = ((i * 60 + scrollRotation) * Math.PI) / 180;
+              const radius = window.innerWidth < 640 ? 165 : 250;
+              const hexX = Math.cos(hexAngle) * radius;
+              const hexY = Math.sin(hexAngle) * radius;
               const hexZ = 0;
-              const hexScale = 0.55;
+              const hexRotateZ = i * 60 + scrollRotation + 90;
+              const hexRotateX = 0;
+              const hexScale = 0.58;
 
-              // --- 2. 3D Cylindrical Vertical Drum Coordinates (Phase B) ---
-              let drumOffset = i - drumCycleProgress;
-              const drumY = drumOffset * 145;
-              const drumZ = -Math.abs(drumOffset) * 110;
-              const drumRotateX = -drumOffset * 34;
-              const drumRotateZ = 0;
+              // --- Phase B: 3D Cylindrical Vertical Drum ---
+              // translate3d(0, sin(theta) * 220px, cos(theta) * 220px - 220px) rotateX(theta)
+              const offset = i - drumCycleProgress;
+              const theta = offset * 0.62; // in radians
               const drumX = 0;
-              const drumScale = 1 - Math.min(Math.abs(drumOffset) * 0.16, 0.45);
+              const drumY = Math.sin(theta) * 220;
+              const drumZ = Math.cos(theta) * 220 - 220;
+              const drumRotateX = -theta * (180 / Math.PI);
+              const drumRotateZ = 0;
+              const drumScale = 1 - Math.min(Math.abs(offset) * 0.15, 0.42);
 
-              // --- 3. Smooth Interpolation based on morph progress ---
-              const currentX = hexX * (1 - morph) + drumX * morph;
-              const currentY = hexY * (1 - morph) + drumY * morph;
-              const currentZ = hexZ * (1 - morph) + drumZ * morph;
-              const currentRotateX = hexRotateX * (1 - morph) + drumRotateX * morph;
-              const currentRotateZ = hexRotateZ * (1 - morph) + drumRotateZ * morph;
-              const currentScale = hexScale * (1 - morph) + drumScale * morph;
+              // --- Smooth GSAP Interpolation ---
+              const currentX = gsap.utils.interpolate(hexX, drumX, morph);
+              const currentY = gsap.utils.interpolate(hexY, drumY, morph);
+              const currentZ = gsap.utils.interpolate(hexZ, drumZ, morph);
+              const currentRotateX = gsap.utils.interpolate(hexRotateX, drumRotateX, morph);
+              const currentRotateZ = gsap.utils.interpolate(hexRotateZ, drumRotateZ, morph);
+              const currentScale = gsap.utils.interpolate(hexScale, drumScale, morph);
 
               const isCurrent = activeIndex === i;
-              const drumOpacity = 1 - Math.min(Math.abs(drumOffset) * 0.38, 0.75);
-              const opacity = (1 - morph) * 0.95 + morph * drumOpacity;
-              const zIndex = 30 - Math.abs(Math.round(drumOffset)) * 5;
+              const drumOpacity = 1 - Math.min(Math.abs(offset) * 0.36, 0.72);
+              const opacity = gsap.utils.interpolate(0.95, drumOpacity, morph);
+              const zIndex = Math.round(30 - Math.abs(offset) * 5);
 
               return (
                 <div
@@ -206,7 +204,7 @@ export const WorksDrum: React.FC<WorksDrumProps> = ({ onSelectProject }) => {
           </div>
         </div>
 
-        {/* Right Sidebar: Vertical Index List with Active Underline */}
+        {/* Right Sidebar: Vertical Index List with Underline */}
         <div className="w-1/4 hidden md:flex flex-col items-end justify-center z-20 space-y-3.5">
           {PROJECTS.map((project, i) => {
             const isCurrent = activeIndex === i;

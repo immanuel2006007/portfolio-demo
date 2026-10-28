@@ -9,6 +9,18 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [magnetPos, setMagnetPos] = useState<{ [key: string]: { x: number; y: number } }>({});
+
+  const handleMagneticMove = (key: string, e: React.MouseEvent<HTMLAnchorElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) * 0.35;
+    const y = (e.clientY - rect.top - rect.height / 2) * 0.35;
+    setMagnetPos((prev) => ({ ...prev, [key]: { x, y } }));
+  };
+
+  const handleMagneticLeave = (key: string) => {
+    setMagnetPos((prev) => ({ ...prev, [key]: { x: 0, y: 0 } }));
+  };
 
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false);
@@ -28,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
   ];
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-40 px-6 sm:px-12 py-6">
+    <header className="absolute top-0 left-0 right-0 z-40 px-6 sm:px-12 py-6 select-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Left: Brand Wordmark */}
         <div
@@ -53,13 +65,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
           ))}
         </nav>
 
-        {/* Right: 4 Circular Icon Buttons */}
+        {/* Right: 4 Circular Magnetic Icon Buttons */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           <a
             href={PERSONAL_INFO.socials.instagram}
             target="_blank"
             rel="noopener noreferrer"
             title="Instagram"
+            onMouseMove={(e) => handleMagneticMove('ig', e)}
+            onMouseLeave={() => handleMagneticLeave('ig')}
+            style={{
+              transform: `translate3d(${magnetPos.ig?.x || 0}px, ${magnetPos.ig?.y || 0}px, 0)`,
+            }}
             className="w-9 h-9 rounded-full border border-black/15 bg-white/80 backdrop-blur-sm flex items-center justify-center text-black hover:bg-black hover:text-white hover:border-black transition-all shadow-sm"
           >
             <InstagramIcon size={14} />
@@ -69,6 +86,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
             target="_blank"
             rel="noopener noreferrer"
             title="X / Twitter"
+            onMouseMove={(e) => handleMagneticMove('tw', e)}
+            onMouseLeave={() => handleMagneticLeave('tw')}
+            style={{
+              transform: `translate3d(${magnetPos.tw?.x || 0}px, ${magnetPos.tw?.y || 0}px, 0)`,
+            }}
             className="w-9 h-9 rounded-full border border-black/15 bg-white/80 backdrop-blur-sm flex items-center justify-center text-black hover:bg-black hover:text-white hover:border-black transition-all shadow-sm"
           >
             <TwitterIcon size={14} />
@@ -78,6 +100,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
             target="_blank"
             rel="noopener noreferrer"
             title="LinkedIn"
+            onMouseMove={(e) => handleMagneticMove('li', e)}
+            onMouseLeave={() => handleMagneticLeave('li')}
+            style={{
+              transform: `translate3d(${magnetPos.li?.x || 0}px, ${magnetPos.li?.y || 0}px, 0)`,
+            }}
             className="w-9 h-9 rounded-full border border-black/15 bg-white/80 backdrop-blur-sm flex items-center justify-center text-black hover:bg-black hover:text-white hover:border-black transition-all shadow-sm"
           >
             <LinkedinIcon size={14} />
@@ -87,6 +114,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
             target="_blank"
             rel="noopener noreferrer"
             title="GitHub"
+            onMouseMove={(e) => handleMagneticMove('gh', e)}
+            onMouseLeave={() => handleMagneticLeave('gh')}
+            style={{
+              transform: `translate3d(${magnetPos.gh?.x || 0}px, ${magnetPos.gh?.y || 0}px, 0)`,
+            }}
             className="w-9 h-9 rounded-full border border-black/15 bg-white/80 backdrop-blur-sm flex items-center justify-center text-black hover:bg-black hover:text-white hover:border-black transition-all shadow-sm"
           >
             <GithubIcon size={14} />

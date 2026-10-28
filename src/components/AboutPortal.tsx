@@ -21,6 +21,8 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
   const contentInsideRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const ctx = gsap.context(() => {
       if (!containerRef.current || !cardRef.current) return;
 
@@ -28,17 +30,17 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
-          end: '+=200%',
+          end: '+=180%',
           pin: true,
           scrub: 1,
         },
       });
 
-      // Split text ABOUT left (-40vw) and ME right (+40vw)
+      // Split text: ABOUT translates to -38vw, ME translates to +38vw
       tl.to(
         textLeftRef.current,
         {
-          x: '-40vw',
+          x: '-38vw',
           opacity: 0,
           ease: 'power1.inOut',
         },
@@ -48,25 +50,25 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
       tl.to(
         textRightRef.current,
         {
-          x: '40vw',
+          x: '38vw',
           opacity: 0,
           ease: 'power1.inOut',
         },
         0
       );
 
-      // Expand center square from 320px x 320px to 86vw x 78vh
+      // Center square scales from 320px x 320px to 86vw x 78vh (border-radius: 20px)
       tl.fromTo(
         cardRef.current,
         {
           width: '320px',
           height: '320px',
-          borderRadius: '24px',
+          borderRadius: '16px',
         },
         {
           width: '86vw',
           height: '78vh',
-          borderRadius: '32px',
+          borderRadius: '20px',
           ease: 'power1.inOut',
         },
         0
@@ -77,14 +79,14 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
         contentInsideRef.current,
         {
           opacity: 0,
-          scale: 0.94,
+          scale: 0.95,
         },
         {
           opacity: 1,
           scale: 1,
           ease: 'power2.out',
         },
-        0.35
+        0.3
       );
     }, containerRef);
 
@@ -214,11 +216,11 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
       {/* Center Expandable Dark Card / Modal Frame */}
       <div
         ref={cardRef}
-        className="relative z-30 bg-[#08080A]/95 border border-white/[0.12] shadow-[0_0_60px_rgba(0,0,0,0.8)] flex flex-col justify-between overflow-hidden backdrop-blur-xl"
+        className="relative z-30 bg-[#08080A]/95 border border-white/[0.12] shadow-[0_0_60px_rgba(0,0,0,0.85)] flex flex-col justify-between overflow-hidden backdrop-blur-xl"
         style={{
           width: '320px',
           height: '320px',
-          borderRadius: '24px',
+          borderRadius: '16px',
         }}
       >
         {/* Inside Modal Content */}
@@ -236,15 +238,15 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
             </span>
           </div>
 
-          {/* Center Graphic: Diagonal Volumetric Spotlight Beam + Floating Human Silhouette */}
+          {/* Center Graphic: Diagonal Volumetric Spotlight Cone + Levitating Human Silhouette */}
           <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden pointer-events-none">
-            {/* Volumetric spotlight beam from top-right to center */}
+            {/* Volumetric diagonal light cone using conic-gradient from top-right */}
             <div
-              className="absolute w-[700px] h-[400px] -rotate-35 opacity-40 pointer-events-none"
+              className="absolute w-[800px] h-[500px] -rotate-30 opacity-45 pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(ellipse at 85% 15%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 35%, rgba(255,255,255,0) 70%)',
-                filter: 'blur(16px)',
+                  'conic-gradient(from 220deg at 80% 15%, rgba(255,255,255,0.7) 0deg, rgba(255,255,255,0.18) 35deg, rgba(255,255,255,0) 65deg)',
+                filter: 'blur(20px)',
               }}
             />
 
@@ -253,7 +255,7 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
               <div className="absolute inset-0 bg-white/40 filter blur-xl rounded-full scale-125" />
 
               <svg
-                className="w-32 h-32 sm:w-44 sm:h-44 text-white filter drop-shadow-[0_0_18px_rgba(255,255,255,0.9)]"
+                className="w-32 h-32 sm:w-44 sm:h-44 text-white filter drop-shadow-[0_0_18px_rgba(255,255,255,0.95)]"
                 viewBox="0 0 100 100"
                 fill="none"
               >
