@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { InstagramIcon, TwitterIcon, LinkedinIcon, GithubIcon } from './Icons';
 import { PERSONAL_INFO } from '../data/portfolioData';
@@ -8,27 +8,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
-  const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['home', 'about', 'experience', 'featured', 'works', 'services'];
-      for (const section of sections) {
-        const el = document.getElementById(section);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 200 && rect.bottom >= 200) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false);
@@ -48,7 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 px-4 sm:px-8 py-5 transition-all duration-300">
+    <header className="absolute top-0 left-0 right-0 z-40 px-6 sm:px-12 py-6">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Left: Brand Wordmark */}
         <div
@@ -58,29 +38,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
           <span className="font-display font-black text-xl tracking-tight text-black group-hover:opacity-70 transition-opacity">
             ECHO<span className="text-zinc-400"> •</span>
           </span>
-          <span className="hidden md:inline-block text-[10px] font-mono-tech text-zinc-500 tracking-[0.2em]">
-            IMMANUEL
-          </span>
         </div>
 
         {/* Center Floating Pill Menu */}
-        <nav className="hidden lg:flex items-center space-x-1 sm:space-x-2 bg-white/75 backdrop-blur-md border border-black/10 shadow-[0_2px_15px_rgba(0,0,0,0.04)] px-5 py-2 rounded-full">
+        <nav className="hidden lg:flex items-center space-x-1 sm:space-x-2 bg-white/70 backdrop-blur border border-black/10 shadow-[0_2px_15px_rgba(0,0,0,0.04)] px-6 py-2 rounded-full">
           {navLinks.map((link) => (
             <button
               key={link.id}
               onClick={() => scrollTo(link.id)}
-              className={`px-3 py-1 text-[11px] font-mono-tech tracking-[0.14em] transition-all rounded-full ${
-                activeSection === link.id
-                  ? 'text-black font-bold bg-black/5'
-                  : 'text-zinc-600 hover:text-black hover:bg-black/5'
-              }`}
+              className="px-3.5 py-1 text-[11px] font-mono-tech tracking-[0.14em] text-zinc-600 hover:text-black hover:bg-black/5 transition-all rounded-full cursor-pointer"
             >
               {link.label}
             </button>
           ))}
         </nav>
 
-        {/* Right: Circular Icon Buttons + Mobile Menu Toggle */}
+        {/* Right: 4 Circular Icon Buttons */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           <a
             href={PERSONAL_INFO.socials.instagram}
@@ -136,11 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenContact }) => {
             <button
               key={link.id}
               onClick={() => scrollTo(link.id)}
-              className={`text-left px-4 py-2.5 text-xs font-mono-tech tracking-[0.14em] rounded-lg transition-colors ${
-                activeSection === link.id
-                  ? 'bg-black text-white font-bold'
-                  : 'text-zinc-700 hover:bg-zinc-100'
-              }`}
+              className="text-left px-4 py-2.5 text-xs font-mono-tech tracking-[0.14em] rounded-lg text-zinc-700 hover:bg-zinc-100 transition-colors"
             >
               {link.label}
             </button>

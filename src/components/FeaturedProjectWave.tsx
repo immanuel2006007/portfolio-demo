@@ -1,8 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
-import { GithubIcon } from './Icons';
+import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { PROJECTS } from '../data/portfolioData';
 import type { Project } from '../data/portfolioData';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface FeaturedProjectWaveProps {
   onSelectProject: (project: Project) => void;
@@ -11,198 +14,237 @@ interface FeaturedProjectWaveProps {
 export const FeaturedProjectWave: React.FC<FeaturedProjectWaveProps> = ({
   onSelectProject,
 }) => {
-  const [activeIndex, setActiveIndex] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
 
-  const totalCards = PROJECTS.length;
+  const [activeProject, setActiveProject] = useState<Project>(PROJECTS[1]);
+  const [activeProjectIndex, setActiveProjectIndex] = useState(1);
 
-  const nextCard = () => {
-    setActiveIndex((prev) => (prev + 1) % totalCards);
-  };
-
-  const prevCard = () => {
-    setActiveIndex((prev) => (prev - 1 + totalCards) % totalCards);
-  };
-
-  // Keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') nextCard();
-      if (e.key === 'ArrowLeft') prevCard();
+    const canvas = canvasRef.current;
+    if (!canvas || !containerRef.current) return;
+
+    // Three.js Scene Setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf5f5f3);
+
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      canvas.clientWidth / canvas.clientHeight,
+      0.1,
+      100
+    );
+    camera.position.z = 6.2;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Custom Shader Material with Sine-Wave Vertex Displacement
+    const vertexShader = `
+      uniform float uScroll;
+      uniform float uTime;
+      varying vec2 vUv;
+      
+      void main() {
+        vUv = uv;
+        vec3 pos = position;
+        
+        // Exact 3D sine-wave deformation specified in the prompt:
+        pos.y += sin(pos.x * 0.6 + uScroll) * 0.45;
+        pos.z += cos(pos.x * 0.5 + uScroll) * 0.35;
+        
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+      }
+    `;
+
+    const fragmentShader = `
+      uniform sampler2D uTexture;
+      uniform float uOpacity;
+      varying vec2 vUv;
+      
+      void main() {
+        vec4 color = texture2D(uTexture, vUv);
+        // Vignette at edges
+        float d = distance(vUv, vec2(0.5));
+        color.rgb *= (1.0 - d * 0.3);
+        gl_FragColor = vec4(color.rgb, color.a * uOpacity);
+      }
+    `;
+
+    const textureLoader = new THREE.TextureLoader();
+    const cardMeshes: THREE.Mesh[] = [];
+    const ribbonGroup = new THREE.Group();
+    scene.add(ribbonGroup);
+
+    const cardWidth = 3.2;
+    const cardHeight = 2.0;
+    const cardSpacing = 3.8;
+
+    // Create a mesh for each project
+    PROJECTS.forEach((project, index) => {
+      const geometry = new THREE.PlaneGeometry(cardWidth, cardHeight, 64, 64);
+      const texture = textureLoader.load(project.image);
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+
+      const material = new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          uScroll: { value: 0 },
+          uTime: { value: 0 },
+          uTexture: { value: texture },
+          uOpacity: { value: 0.95 },
+        },
+        side: THREE.DoubleSide,
+        transparent: true,
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.x = (index - 1) * cardSpacing;
+      mesh.userData = { index, project };
+      ribbonGroup.add(mesh);
+      cardMeshes.push(mesh);
+    });
+
+    let currentScroll = 0;
+    let targetScroll = 0;
+
+    // Pinned 300vh GSAP ScrollTrigger Sequence
+    const st = ScrollTrigger.create({
+      trigger: containerRef.current,
+      start: 'top top',
+      end: '+=300%',
+      pin: true,
+      scrub: 1.2,
+      onUpdate: (self) => {
+        const progress = self.progress;
+
+        // Entry 0% - 20%: Fade heading
+        if (headingRef.current) {
+          if (progress < 0.2) {
+            headingRef.current.style.opacity = `${1 - progress / 0.2}`;
+          } else {
+            headingRef.current.style.opacity = '0';
+          }
+        }
+
+        // WebGL Wave Ribbon scroll (20% - 100%)
+        // Translate entire ribbon horizontally across viewport
+        const maxScrollDist = (PROJECTS.length - 1) * cardSpacing;
+        targetScroll = progress * maxScrollDist;
+      },
+    });
+
+    // Animation Loop
+    let animationId: number;
+    const clock = new THREE.Clock();
+
+    const animate = () => {
+      animationId = requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      // Smooth scroll interpolation
+      currentScroll += (targetScroll - currentScroll) * 0.08;
+
+      // Update shader uniforms & ribbon position
+      ribbonGroup.position.x = -currentScroll;
+
+      cardMeshes.forEach((mesh) => {
+        const mat = mesh.material as THREE.ShaderMaterial;
+        mat.uniforms.uScroll.value = currentScroll * 0.45;
+        mat.uniforms.uTime.value = elapsedTime;
+
+        // Check which card is closest to center (world x = 0)
+        const worldPos = new THREE.Vector3();
+        mesh.getWorldPosition(worldPos);
+        const distToCenter = Math.abs(worldPos.x);
+
+        if (distToCenter < cardSpacing / 2) {
+          const idx = mesh.userData.index;
+          if (idx !== activeProjectIndex) {
+            setActiveProjectIndex(idx);
+            setActiveProject(mesh.userData.project);
+          }
+        }
+      });
+
+      renderer.render(scene, camera);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setStartX(e.clientX);
-  };
+    animate();
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const diff = e.clientX - startX;
-    if (diff > 80) {
-      prevCard();
-      setIsDragging(false);
-    } else if (diff < -80) {
-      nextCard();
-      setIsDragging(false);
-    }
-  };
+    // Resize Handler
+    const handleResize = () => {
+      if (!canvas) return;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+    window.addEventListener('resize', handleResize);
 
-  const activeProject = PROJECTS[activeIndex];
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
+      st.kill();
+      renderer.dispose();
+      cardMeshes.forEach((m) => {
+        m.geometry.dispose();
+        (m.material as THREE.Material).dispose();
+      });
+    };
+  }, [activeProjectIndex]);
 
   return (
     <section
       id="featured"
       ref={containerRef}
-      className="relative min-h-screen w-full bg-[#F5F5F3] text-black flex flex-col justify-between py-12 sm:py-16 px-6 sm:px-14 overflow-hidden select-none"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      className="relative h-screen w-full bg-[#F5F5F3] text-black flex flex-col justify-between overflow-hidden select-none"
     >
-      {/* Top Header: FEATURED PROJECT */}
-      <div className="w-full flex items-center justify-between border-b border-black/[0.08] pb-4 z-20">
-        <h2 className="text-xl sm:text-2xl font-display font-black tracking-tight uppercase">
+      {/* Top Header: FEATURED PROJECT (fades out during entry 0%–20%) */}
+      <div
+        ref={headingRef}
+        className="absolute top-10 left-8 sm:left-14 z-30 transition-opacity duration-300 pointer-events-none"
+      >
+        <h2 className="text-xl sm:text-2xl font-display font-black tracking-tight uppercase text-black">
           FEATURED PROJECT
         </h2>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={prevCard}
-            className="w-10 h-10 rounded-full border border-black/15 bg-white flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm cursor-pointer"
-            aria-label="Previous Project"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <button
-            onClick={nextCard}
-            className="w-10 h-10 rounded-full border border-black/15 bg-white flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm cursor-pointer"
-            aria-label="Next Project"
-          >
-            <ArrowRight size={16} />
-          </button>
-        </div>
       </div>
 
-      {/* 3D Sine Wave Ribbon Carousel Stage */}
-      <div className="relative flex-1 flex items-center justify-center perspective-[1200px] my-6 py-8 overflow-visible">
-        <div className="relative w-full max-w-5xl h-[380px] sm:h-[460px] flex items-center justify-center transform-style-3d">
-          {PROJECTS.map((project, i) => {
-            const offset = i - activeIndex;
-            if (Math.abs(offset) > 3) return null;
-
-            // 3D Sine-wave coordinates calculation
-            const translateX = offset * 320;
-            const translateZ = Math.cos(offset * 0.75) * 60 - Math.abs(offset) * 90;
-            const translateY = Math.sin(offset * 1.2) * 28;
-            const rotateY = -offset * 18;
-            const rotateZ = Math.sin(offset * 0.8) * 3;
-            const scale = 1 - Math.min(Math.abs(offset) * 0.12, 0.35);
-            const opacity = 1 - Math.min(Math.abs(offset) * 0.28, 0.65);
-            const zIndex = 30 - Math.abs(offset) * 5;
-
-            const isCenter = offset === 0;
-
-            return (
-              <div
-                key={project.id}
-                onClick={() => {
-                  if (isCenter) {
-                    onSelectProject(project);
-                  } else {
-                    setActiveIndex(i);
-                  }
-                }}
-                className={`absolute w-[290px] sm:w-[420px] h-[330px] sm:h-[390px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-700 ease-out shadow-[0_20px_50px_rgba(0,0,0,0.18)] ${
-                  isCenter ? 'ring-2 ring-black/80' : 'filter brightness-95'
-                }`}
-                style={{
-                  transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
-                  opacity,
-                  zIndex,
-                }}
-              >
-                {/* Project Screenshot / Visual */}
-                <div className="relative w-full h-full bg-[#0A0A0A] group">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-700"
-                  />
-
-                  {/* Dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-6 text-white">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono-tech tracking-[0.2em] px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15">
-                        {project.category}
-                      </span>
-                      <span className="text-[10px] font-mono-tech text-white/60">
-                        {`0${i + 1} / 0${totalCards}`}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="font-display font-black text-2xl sm:text-3xl tracking-tight uppercase leading-tight">
-                        {project.title}
-                      </h3>
-                      <p className="text-xs font-mono-tech text-white/70 line-clamp-2 mt-1">
-                        {project.subtitle}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      {/* WebGL Canvas for 3D Wave Ribbon */}
+      <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full cursor-pointer"
+          onClick={() => onSelectProject(activeProject)}
+        />
       </div>
 
-      {/* Dynamic Centered Caption */}
-      <div className="text-center z-20 my-2">
+      {/* Dynamic Project Title & Subtitle based on card closest to center */}
+      <div className="absolute top-[75%] inset-x-0 z-20 flex flex-col items-center justify-center text-center pointer-events-none px-6">
         <p className="text-xs sm:text-sm font-mono-tech font-bold uppercase tracking-widest text-zinc-900">
           {activeProject.category}
         </p>
-        <p className="text-[11px] font-mono-tech text-zinc-500 tracking-wider mt-0.5">
-          {activeProject.subtitle} — {`0${activeIndex + 1} / 0${totalCards}`}
+        <p className="text-[11px] sm:text-xs font-mono-tech text-zinc-500 tracking-wider mt-1 max-w-lg">
+          {activeProject.title} — {activeProject.subtitle}
         </p>
       </div>
 
-      {/* Bottom Row: Pinned "LANDING PAGES" + Project Links */}
-      <div className="w-full flex flex-col sm:flex-row items-start sm:items-end justify-between border-t border-black/[0.08] pt-4 z-20 gap-4">
-        {/* Pinned Bottom-Left Title */}
-        <h3 className="font-display font-black text-3xl sm:text-5xl tracking-[-0.03em] uppercase text-black">
+      {/* Pinned Bottom-Left: LANDING PAGES */}
+      <div className="absolute bottom-8 left-8 sm:left-14 z-20 pointer-events-none">
+        <h3 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl tracking-[-0.03em] uppercase text-black leading-none">
           LANDING PAGES
         </h3>
-
-        {/* Action button for active project */}
-        <div className="flex items-center space-x-3">
-          {activeProject.githubUrl && (
-            <a
-              href={activeProject.githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-full border border-black/15 bg-white text-black font-mono-tech text-xs tracking-wider font-semibold hover:bg-black hover:text-white transition-all flex items-center space-x-1.5 shadow-sm"
-            >
-              <GithubIcon size={13} />
-              <span>SOURCE</span>
-            </a>
-          )}
-          <button
-            onClick={() => onSelectProject(activeProject)}
-            className="px-5 py-2 rounded-full bg-black text-white font-mono-tech text-xs tracking-wider font-bold hover:bg-zinc-800 transition-all flex items-center space-x-1.5 shadow-md cursor-pointer"
-          >
-            <span>VIEW CASE STUDY</span>
-            <ExternalLink size={13} />
-          </button>
-        </div>
       </div>
     </section>
   );

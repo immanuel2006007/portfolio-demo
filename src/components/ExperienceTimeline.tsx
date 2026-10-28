@@ -7,7 +7,7 @@ gsap.registerPlugin(ScrollTrigger);
 export const ExperienceTimeline: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'learning' | 'leadership' | 'freelance'>('learning');
+  const [activeTab, setActiveTab] = useState<'learning' | 'freelance'>('learning');
   const [activeLabel, setActiveLabel] = useState('ORIGIN & FOUNDATIONS');
   const [progressWidth, setProgressWidth] = useState(0);
 
@@ -28,12 +28,12 @@ export const ExperienceTimeline: React.FC = () => {
           end: () => `+=${track.scrollWidth}`,
           onUpdate: (self) => {
             setProgressWidth(self.progress * 100);
-            if (self.progress < 0.25) {
+            if (self.progress < 0.3) {
               setActiveLabel('ORIGIN & FOUNDATIONS');
               setActiveTab('learning');
-            } else if (self.progress < 0.65) {
-              setActiveLabel('ACADEMIC RIGOR & LEADERSHIP');
-              setActiveTab('leadership');
+            } else if (self.progress < 0.68) {
+              setActiveLabel('SELF-DIRECTED LEARNING');
+              setActiveTab('learning');
             } else {
               setActiveLabel('FREELANCE & PRODUCTION WORK');
               setActiveTab('freelance');
@@ -46,13 +46,17 @@ export const ExperienceTimeline: React.FC = () => {
     return () => ctx.revert();
   }, []);
 
-  const jumpToSlide = (index: number, tabName: 'learning' | 'leadership' | 'freelance') => {
+  const jumpToSlide = (targetIndex: number, tabName: 'learning' | 'freelance') => {
     setActiveTab(tabName);
-    if (!containerRef.current || !trackRef.current) return;
-    const scrollTriggerInstance = ScrollTrigger.getAll().find(st => st.trigger === containerRef.current);
+    if (!containerRef.current) return;
+    const scrollTriggerInstance = ScrollTrigger.getAll().find(
+      (st) => st.trigger === containerRef.current
+    );
     if (scrollTriggerInstance) {
-      const targetProgress = index / 3;
-      const targetScroll = scrollTriggerInstance.start + targetProgress * (scrollTriggerInstance.end - scrollTriggerInstance.start);
+      const targetProgress = targetIndex / 3;
+      const targetScroll =
+        scrollTriggerInstance.start +
+        targetProgress * (scrollTriggerInstance.end - scrollTriggerInstance.start);
       window.scrollTo({ top: targetScroll, behavior: 'smooth' });
     }
   };
@@ -89,7 +93,7 @@ export const ExperienceTimeline: React.FC = () => {
       {/* Background Watermark Marquee */}
       <div className="absolute inset-0 flex items-center pointer-events-none opacity-[0.04] overflow-hidden whitespace-nowrap z-0">
         <div className="text-[18vw] font-display font-black tracking-tighter uppercase select-none animate-marquee">
-          CREATIVE TECHNOLOGIST — 2023–2026 SELF-DIRECTED — FULL STACK DEVELOPER — IMMANUEL JAYARUBAN —
+          CREATIVE TECHNOLOGIST — 2023 SELF-DIRECTED — FULL STACK DEVELOPER — IMMANUEL JAYARUBAN —
         </div>
       </div>
 
@@ -102,19 +106,19 @@ export const ExperienceTimeline: React.FC = () => {
         <div className="timeline-panel min-w-[70vw] sm:min-w-[50vw] lg:min-w-[42vw] pr-12 flex flex-col justify-center">
           <div className="flex flex-col space-y-4">
             <span className="text-[11px] font-mono-tech tracking-[0.2em] text-white/40">
-              FOUNDATION & JOURNEY
+              EXPLORING ROLES & CRAFT
             </span>
             <h2 className="text-5xl sm:text-7xl lg:text-8xl font-display font-black tracking-[-0.03em] uppercase leading-none">
               WHERE I'VE <br />
               <span className="text-zinc-500">BEEN</span>
             </h2>
             <p className="text-xs sm:text-sm font-mono-tech text-zinc-400 max-w-md leading-relaxed mt-4">
-              A chronology of self-directed technical discipline, academic distinction, and client delivery across modern creative web technologies and artificial intelligence.
+              A chronology of intensive self-education, academic distinction, and delivering high-impact digital experiences across web technologies and intelligent agents.
             </p>
           </div>
         </div>
 
-        {/* Slide 1: SELF-DIRECTED LEARNING / CREATIVE TECHNOLOGIST */}
+        {/* Slide 1: 2023–2025 — SELF-DIRECTED LEARNING */}
         <div className="timeline-panel min-w-[85vw] sm:min-w-[70vw] lg:min-w-[55vw] px-8 sm:px-12 py-10 rounded-3xl bg-[#0e0e11] border border-white/[0.08] mx-6 flex flex-col justify-between shadow-2xl">
           <div>
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-6">
@@ -130,39 +134,31 @@ export const ExperienceTimeline: React.FC = () => {
               <span className="text-zinc-400">TECHNOLOGIST</span>
             </h3>
             <p className="text-xs sm:text-sm font-mono-tech leading-relaxed text-zinc-300 max-w-xl">
-              Intensive self-education period exploring web technologies, creative coding, offline LLMs, and modern development practices.
+              Intensive self-education period exploring web technologies, creative coding, and modern development practices.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-white/[0.08] mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8 border-t border-white/[0.08] mt-8">
             <div>
               <span className="text-[10px] font-mono-tech tracking-[0.16em] text-white/40 block mb-1">
                 MILESTONE 01
               </span>
-              <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Completed 500+ hours of hands-on full-stack development.
+              <p className="text-xs sm:text-sm font-mono-tech text-zinc-300 leading-snug">
+                Completed 500+ hours of hands-on development.
               </p>
             </div>
             <div>
               <span className="text-[10px] font-mono-tech tracking-[0.16em] text-white/40 block mb-1">
                 MILESTONE 02
               </span>
-              <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Mastered React, Node.js, Python, and TypeScript ecosystem.
-              </p>
-            </div>
-            <div>
-              <span className="text-[10px] font-mono-tech tracking-[0.16em] text-white/40 block mb-1">
-                MILESTONE 03
-              </span>
-              <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Built portfolio of 15+ production-grade web & AI projects.
+              <p className="text-xs sm:text-sm font-mono-tech text-zinc-300 leading-snug">
+                Mastered React, Node.js, and TypeScript ecosystem.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Slide 2: ACADEMIC LEADERSHIP & HONORS */}
+        {/* Slide 2: 2024–2025 — DEPARTMENT CHAIRMAN & 1ST RANK */}
         <div className="timeline-panel min-w-[85vw] sm:min-w-[70vw] lg:min-w-[55vw] px-8 sm:px-12 py-10 rounded-3xl bg-[#0e0e11] border border-white/[0.08] mx-6 flex flex-col justify-between shadow-2xl">
           <div>
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-6">
@@ -170,7 +166,7 @@ export const ExperienceTimeline: React.FC = () => {
                 2024 — 2025
               </span>
               <span className="text-[10px] font-mono-tech tracking-[0.2em] px-3 py-1 rounded-full bg-white/5 text-white/70 border border-white/10">
-                ACADEMIC EXCELLENCE
+                ACADEMIC HONORS
               </span>
             </div>
             <h3 className="text-4xl sm:text-6xl font-display font-black tracking-tight uppercase leading-tight mb-4">
@@ -178,7 +174,7 @@ export const ExperienceTimeline: React.FC = () => {
               <span className="text-zinc-400">CHAIRMAN</span>
             </h3>
             <p className="text-xs sm:text-sm font-mono-tech leading-relaxed text-zinc-300 max-w-xl">
-              Elected Department Chairman (AI & Data Science) and Class Representative. Secured 1st Rank across the entire batch in Computer Science & Artificial Intelligence.
+              Elected Department Chairman of AI & Data Science and Class Representative. Secured 1st Rank across the entire department.
             </p>
           </div>
 
@@ -188,7 +184,7 @@ export const ExperienceTimeline: React.FC = () => {
                 LEADERSHIP
               </span>
               <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Organized technical hackathons and spearheaded department initiatives.
+                Spearheaded academic symposiums and student mentorship.
               </p>
             </div>
             <div>
@@ -196,21 +192,21 @@ export const ExperienceTimeline: React.FC = () => {
                 1ST RANK HOLDER
               </span>
               <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Consistent top academic performance and computer science rigor.
+                Consistent #1 departmental academic ranking and rigor.
               </p>
             </div>
             <div>
               <span className="text-[10px] font-mono-tech tracking-[0.16em] text-white/40 block mb-1">
-                REPRESENTATION
+                REPRESENTATIVE
               </span>
               <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Elected class representative fostering peer mentorship & growth.
+                Elected class representative coordinating technical growth.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Slide 3: FULL STACK & AI DEVELOPMENT */}
+        {/* Slide 3: 2025–PRESENT — FULL STACK DEVELOPER */}
         <div className="timeline-panel min-w-[85vw] sm:min-w-[70vw] lg:min-w-[55vw] px-8 sm:px-12 py-10 rounded-3xl bg-[#0e0e11] border border-white/[0.08] mx-6 flex flex-col justify-between shadow-2xl">
           <div>
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-6">
@@ -218,7 +214,7 @@ export const ExperienceTimeline: React.FC = () => {
                 2025 — PRESENT
               </span>
               <span className="text-[10px] font-mono-tech tracking-[0.2em] px-3 py-1 rounded-full bg-white/5 text-white/70 border border-white/10">
-                PRODUCTION WORK
+                CLIENT & PRODUCTION WORK
               </span>
             </div>
             <h3 className="text-4xl sm:text-6xl font-display font-black tracking-tight uppercase leading-tight mb-4">
@@ -226,7 +222,7 @@ export const ExperienceTimeline: React.FC = () => {
               <span className="text-zinc-400">DEVELOPER</span>
             </h3>
             <p className="text-xs sm:text-sm font-mono-tech leading-relaxed text-zinc-300 max-w-xl">
-              Building premium web experiences and AI-driven applications. Specializing in interactive frontends, offline LLM agent systems (Ollama), and scalable database architectures.
+              Building premium web experiences for clients worldwide. Specializing in interactive frontends, scalable backends, and AI-powered applications.
             </p>
           </div>
 
@@ -236,7 +232,7 @@ export const ExperienceTimeline: React.FC = () => {
                 DELIVERY
               </span>
               <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Delivered 20+ applications across web, AI, voice, and vision.
+                Built and deployed 20+ applications across web, AI & vision.
               </p>
             </div>
             <div>
@@ -244,7 +240,7 @@ export const ExperienceTimeline: React.FC = () => {
                 ARCHITECTURE
               </span>
               <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                Engineered local inference pipelines, REST APIs, and MongoDB schemas.
+                Engineered local LLM pipelines (Ollama) and REST/MongoDB backends.
               </p>
             </div>
             <div>
@@ -252,19 +248,19 @@ export const ExperienceTimeline: React.FC = () => {
                 MODERN STACK
               </span>
               <p className="text-xs font-mono-tech text-zinc-300 leading-snug">
-                React, Next.js, GSAP, Python, OpenCV, Ollama, Tailwind CSS.
+                React, Next.js, GSAP, Three.js, Python, OpenCV, Tailwind CSS.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar: Pill Toggles */}
+      {/* Bottom Bar: Pill Indicators LEARNING and FREELANCE */}
       <div className="relative z-30 w-full px-8 sm:px-14 pb-8 flex items-center justify-between">
         <div className="flex items-center space-x-2 bg-white/5 p-1 rounded-full border border-white/10">
           <button
             onClick={() => jumpToSlide(1, 'learning')}
-            className={`px-4 py-1.5 rounded-full text-[11px] font-mono-tech tracking-[0.14em] transition-all cursor-pointer ${
+            className={`px-5 py-1.5 rounded-full text-[11px] font-mono-tech tracking-[0.14em] transition-all cursor-pointer ${
               activeTab === 'learning'
                 ? 'bg-white text-black font-bold shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -273,18 +269,8 @@ export const ExperienceTimeline: React.FC = () => {
             LEARNING
           </button>
           <button
-            onClick={() => jumpToSlide(2, 'leadership')}
-            className={`px-4 py-1.5 rounded-full text-[11px] font-mono-tech tracking-[0.14em] transition-all cursor-pointer ${
-              activeTab === 'leadership'
-                ? 'bg-white text-black font-bold shadow-sm'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            LEADERSHIP
-          </button>
-          <button
             onClick={() => jumpToSlide(3, 'freelance')}
-            className={`px-4 py-1.5 rounded-full text-[11px] font-mono-tech tracking-[0.14em] transition-all cursor-pointer ${
+            className={`px-5 py-1.5 rounded-full text-[11px] font-mono-tech tracking-[0.14em] transition-all cursor-pointer ${
               activeTab === 'freelance'
                 ? 'bg-white text-black font-bold shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -295,7 +281,7 @@ export const ExperienceTimeline: React.FC = () => {
         </div>
 
         <div className="hidden sm:block text-[11px] font-mono-tech text-zinc-500 tracking-[0.14em]">
-          DRAG OR SCROLL TO NAVIGATE →
+          SCROLL TO EXPLORE →
         </div>
       </div>
 

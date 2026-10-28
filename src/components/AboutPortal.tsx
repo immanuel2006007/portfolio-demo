@@ -28,19 +28,19 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
-          end: '+=150%',
+          end: '+=200%',
           pin: true,
           scrub: 1,
         },
       });
 
-      // Split text ABOUT to the left, ME to the right
+      // Split text ABOUT left (-40vw) and ME right (+40vw)
       tl.to(
         textLeftRef.current,
         {
-          x: '-55vw',
-          opacity: 0.15,
-          ease: 'power2.inOut',
+          x: '-40vw',
+          opacity: 0,
+          ease: 'power1.inOut',
         },
         0
       );
@@ -48,26 +48,26 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
       tl.to(
         textRightRef.current,
         {
-          x: '55vw',
-          opacity: 0.15,
-          ease: 'power2.inOut',
+          x: '40vw',
+          opacity: 0,
+          ease: 'power1.inOut',
         },
         0
       );
 
-      // Expand card from small square (280px) to full rounded modal (85vw x 75vh)
+      // Expand center square from 320px x 320px to 86vw x 78vh
       tl.fromTo(
         cardRef.current,
         {
-          width: '280px',
-          height: '280px',
+          width: '320px',
+          height: '320px',
           borderRadius: '24px',
         },
         {
-          width: '88vw',
-          height: '80vh',
+          width: '86vw',
+          height: '78vh',
           borderRadius: '32px',
-          ease: 'power2.inOut',
+          ease: 'power1.inOut',
         },
         0
       );
@@ -77,14 +77,14 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
         contentInsideRef.current,
         {
           opacity: 0,
-          scale: 0.95,
+          scale: 0.94,
         },
         {
           opacity: 1,
           scale: 1,
           ease: 'power2.out',
         },
-        0.3
+        0.35
       );
     }, containerRef);
 
@@ -126,7 +126,6 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
 
           {/* Star Swirl 1 */}
           <circle cx="430" cy="315" r="220" fill="url(#starGlow1)" />
-          {/* Concentric etched rings */}
           {[40, 70, 105, 145, 190, 235].map((r, i) => (
             <circle
               key={`ring1-${i}`}
@@ -173,14 +172,11 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
 
           {/* Gothic Castle Spires on the Left */}
           <g transform="translate(100, 480)" fill="#060608" stroke="rgba(255,255,255,0.18)" strokeWidth="1">
-            {/* Primary Spire */}
             <path d="M 120,420 L 120,160 L 135,0 L 150,160 L 150,420 Z" />
             <path d="M 135,0 L 135,160" stroke="rgba(255,255,255,0.3)" />
-            {/* Secondary Spires */}
             <path d="M 60,420 L 60,240 L 75,110 L 90,240 L 90,420 Z" />
             <path d="M 170,420 L 170,220 L 185,90 L 200,220 L 200,420 Z" />
             <path d="M 215,420 L 215,280 L 225,180 L 235,280 L 235,420 Z" />
-            {/* Turrets and ramparts */}
             <rect x="40" y="320" width="220" height="100" fill="#060608" stroke="rgba(255,255,255,0.15)" />
             <line x1="50" y1="320" x2="50" y2="305" />
             <line x1="80" y1="320" x2="80" y2="305" />
@@ -200,16 +196,16 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
       </div>
 
       {/* Pinned Split Headline: ABOUT and ME */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-8 sm:px-24 z-20">
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-12 sm:px-28 z-20">
         <div
           ref={textLeftRef}
-          className="font-display font-black text-[15vw] sm:text-[14vw] tracking-[-0.04em] text-white/90 uppercase leading-none drop-shadow-2xl"
+          className="font-display font-black text-[15vw] sm:text-[14vw] tracking-[-0.04em] text-white uppercase leading-none drop-shadow-2xl"
         >
           ABOUT
         </div>
         <div
           ref={textRightRef}
-          className="font-display font-black text-[15vw] sm:text-[14vw] tracking-[-0.04em] text-white/90 uppercase leading-none drop-shadow-2xl"
+          className="font-display font-black text-[15vw] sm:text-[14vw] tracking-[-0.04em] text-white uppercase leading-none drop-shadow-2xl"
         >
           ME
         </div>
@@ -218,10 +214,10 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
       {/* Center Expandable Dark Card / Modal Frame */}
       <div
         ref={cardRef}
-        className="relative z-30 bg-[#08080A]/95 border border-white/[0.14] shadow-[0_0_60px_rgba(0,0,0,0.8)] flex flex-col justify-between overflow-hidden backdrop-blur-xl"
+        className="relative z-30 bg-[#08080A]/95 border border-white/[0.12] shadow-[0_0_60px_rgba(0,0,0,0.8)] flex flex-col justify-between overflow-hidden backdrop-blur-xl"
         style={{
-          width: '280px',
-          height: '280px',
+          width: '320px',
+          height: '320px',
           borderRadius: '24px',
         }}
       >
@@ -236,15 +232,15 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
               {PERSONAL_INFO.visionStatement}
             </span>
             <span className="text-[10px] sm:text-xs font-mono-tech tracking-[0.16em] text-zinc-400">
-              {PERSONAL_INFO.locationShort}
+              BASED IN INDIA • WORLDWIDE
             </span>
           </div>
 
-          {/* Center Visual: Diagonal Volumetric Spotlight Beam + Floating Glowing Figure */}
+          {/* Center Graphic: Diagonal Volumetric Spotlight Beam + Floating Human Silhouette */}
           <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden pointer-events-none">
-            {/* Volumetric diagonal light cone */}
+            {/* Volumetric spotlight beam from top-right to center */}
             <div
-              className="absolute w-[600px] h-[350px] -rotate-35 opacity-40 pointer-events-none"
+              className="absolute w-[700px] h-[400px] -rotate-35 opacity-40 pointer-events-none"
               style={{
                 background:
                   'radial-gradient(ellipse at 85% 15%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 35%, rgba(255,255,255,0) 70%)',
@@ -252,9 +248,8 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
               }}
             />
 
-            {/* Glowing floating figure silhouette */}
+            {/* Glowing floating human silhouette */}
             <div className="relative z-10 flex flex-col items-center animate-float">
-              {/* Core glow */}
               <div className="absolute inset-0 bg-white/40 filter blur-xl rounded-full scale-125" />
 
               <svg
@@ -262,7 +257,6 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
                 viewBox="0 0 100 100"
                 fill="none"
               >
-                {/* Minimalist floating figure in horizontal suspension */}
                 <path
                   d="M 30,55 
                      C 35,50 40,48 48,46
@@ -277,9 +271,7 @@ export const AboutPortal: React.FC<AboutPortalProps> = ({
                   fill="white"
                   opacity="0.95"
                 />
-                {/* Head */}
                 <circle cx="82" cy="24" r="5" fill="white" />
-                {/* Floating energy particle aura */}
                 <circle cx="65" cy="20" r="1.5" fill="white" opacity="0.6" className="animate-ping" />
                 <circle cx="45" cy="35" r="1" fill="white" opacity="0.8" />
                 <circle cx="25" cy="50" r="1.5" fill="white" opacity="0.7" />

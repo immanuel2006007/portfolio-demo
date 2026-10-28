@@ -9,7 +9,7 @@ interface ServicesAccordionProps {
 export const ServicesAccordion: React.FC<ServicesAccordionProps> = ({
   onInquire,
 }) => {
-  // Service 3 (AI & Intelligent Agents / Landing Pages) is expanded by default as in prompt
+  // Service 3 (AI & Intelligent Agents) is expanded by default as in the reference video
   const [expandedId, setExpandedId] = useState<string>('srv-3');
 
   const toggleService = (id: string) => {
@@ -22,11 +22,8 @@ export const ServicesAccordion: React.FC<ServicesAccordionProps> = ({
       className="relative min-h-screen w-full bg-[#F5F5F3] text-black flex flex-col justify-center py-20 px-6 sm:px-14 select-none"
     >
       <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
-        {/* Header: Centered Title + Subtitle */}
+        {/* Header: Centered Title + Subtitle (clean brutalist spacing, no extra eyebrow) */}
         <div className="text-center max-w-2xl mb-14">
-          <span className="text-[10px] font-mono-tech tracking-[0.2em] text-zinc-400 block mb-2">
-            SPECIALIZATIONS & CAPABILITIES
-          </span>
           <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight uppercase text-black">
             THE SERVICES WE PROVIDE
           </h2>
